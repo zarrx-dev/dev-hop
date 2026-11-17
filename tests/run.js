@@ -1,7 +1,14 @@
 import System from 'system';
 import { registry } from './harness.js';
 
-const testFiles = ['smoke.test.js'];
+const testFiles = [
+    'smoke.test.js',
+    'sshConfig.test.js',
+    'sshConfigFile.test.js',
+    'template.test.js',
+    'fuzzy.test.js',
+    'presets.test.js',
+];
 
 for (const file of testFiles) {
     await import(`./${file}`);

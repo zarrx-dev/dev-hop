@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="dev-hop">
+  <schema id="org.gnome.shell.extensions.dev-hop" path="/org/gnome/shell/extensions/dev-hop/">
+
+    <key name="pinned" type="s">
+      <default>'[]'</default>
+      <summary>Pinned project folders</summary>
+      <description>JSON array of objects with a path field.</description>
+    </key>
+
+    <key name="search-roots" type="s">
+      <default>'["~"]'</default>
+      <summary>Folders scanned for git projects</summary>
+      <description>JSON array of folder paths. A leading ~ means the home folder.</description>
+    </key>
+    <key name="scan-depth" type="i">
+      <default>4</default>
+      <summary>Scan depth</summary>
+      <description>How many folder levels below each search root are scanned.</description>
+    </key>
+    <key name="skip-dirs" type="s">
+      <default>'["node_modules",".cache","vendor","target","dist","build",".venv","venv","__pycache__"]'</default>
+      <summary>Folder names skipped by the scan</summary>
+      <description>JSON array of folder names.</description>
+    </key>
+
+    <key name="recent-sources" type="s">
+      <default>'{"vscode":true,"vscodium":true,"cursor":true,"zed":true,"jetbrains":true,"claude":true}'</default>
+      <summary>Tools to read recent folders from</summary>
+      <description>JSON object mapping a tool name to true or false.</description>
+    </key>
+    <key name="max-recent" type="i">
+      <default>8</default>
+      <summary>Recent folders per tool</summary>
+      <description>Maximum number of recent folders shown for each tool.</description>
+    </key>
+    <key name="include-worktrees" type="b">
+      <default>false</default>
+      <summary>Include git worktrees</summary>
+      <description>List git worktrees as separate projects.</description>
+    </key>
+
+    <key name="project-actions" type="s">
+      <default>'[{"id":"terminal","name":"Open terminal here","icon":"utilities-terminal-symbolic","template":"","runInTerminal":true,"requiresRemoteDir":false,"enabled":true},{"id":"claude","name":"Terminal + Claude Code","icon":"utilities-terminal-symbolic","template":"claude","runInTerminal":true,"requiresRemoteDir":false,"enabled":true},{"id":"zed","name":"Open in Zed","icon":"text-editor-symbolic","template":"zed {path}","runInTerminal":false,"requiresRemoteDir":false,"enabled":true},{"id":"vscode","name":"Open in VS Code","icon":"text-editor-symbolic","template":"code {path}","runInTerminal":false,"requiresRemoteDir":false,"enabled":true}]'</default>
+      <summary>Actions for projects</summary>
+      <description>JSON array of action objects with id, name, icon, template, runInTerminal, requiresRemoteDir and enabled.</description>
+    </key>
+    <key name="server-actions" type="s">
+      <default>'[{"id":"ssh","name":"SSH","icon":"utilities-terminal-symbolic","template":"ssh {host}","runInTerminal":true,"requiresRemoteDir":false,"enabled":true},{"id":"ssh-folder","name":"SSH to folder","icon":"folder-symbolic","template":"ssh -t {host} {remoteCmd}","runInTerminal":true,"requiresRemoteDir":true,"enabled":true},{"id":"zed-remote","name":"Zed remote","icon":"text-editor-symbolic","template":"zed ssh://{host}{remoteDir}","runInTerminal":false,"requiresRemoteDir":true,"enabled":true},{"id":"vscode-remote","name":"VS Code remote","icon":"text-editor-symbolic","template":"code --remote ssh-remote+{host} {remoteDir}","runInTerminal":false,"requiresRemoteDir":true,"enabled":true}]'</default>
+      <summary>Actions for SSH servers</summary>
+      <description>JSON array of action objects. {remoteCmd} expands to a quoted command that changes to the remote folder and starts a login shell.</description>
+    </key>
+    <key name="default-project-action" type="s">
+      <default>'terminal'</default>
+      <summary>Default project action</summary>
+      <description>Id of the action that runs when a project is activated.</description>
+    </key>
+    <key name="default-server-action" type="s">
+      <default>'ssh'</default>
+      <summary>Default server action</summary>
+      <description>Id of the action that runs when a server is activated.</description>
+    </key>
+
+    <key name="server-meta" type="s">
+      <default>'{}'</default>
+      <summary>Per-server settings</summary>
+      <description>JSON object mapping a host to its remoteDir and defaultAction.</description>
+    </key>
+    <key name="item-overrides" type="s">
+      <default>'{}'</default>
+      <summary>Per-project overrides</summary>
+      <description>JSON object mapping a path to its defaultAction and hidden flag.</description>
+    </key>
+
+    <key name="terminal-preset" type="s">
+      <default>''</default>
+      <summary>Terminal preset</summary>
+      <description>Id of the terminal to use. Empty means the first installed one.</description>
+    </key>
+    <key name="toggle-popup" type="as">
+      <default>['&lt;Super&gt;j']</default>
+      <summary>Shortcut to open the search popup</summary>
+    </key>
+    <key name="show-indicator" type="b">
+      <default>true</default>
+      <summary>Show the top bar icon</summary>
+    </key>
+    <key name="ssh-config-path" type="s">
+      <default>'~/.ssh/config'</default>
+      <summary>SSH config file</summary>
+      <description>Path of the SSH config file that is read and edited.</description>
+    </key>
+
+  </schema>
+</schemalist>

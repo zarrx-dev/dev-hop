@@ -1,0 +1,9 @@
+{
+    "uuid": "dev-hop@zarrx",
+    "name": "dev-hop",
+    "description": "Open projects and SSH servers in your terminal or editor from the top bar or a shortcut.",
+    "shell-version": ["45", "46", "47", "48", "49", "50"],
+    "settings-schema": "org.gnome.shell.extensions.dev-hop",
+    "url": "https://github.com/zarrx-dev/dev-hop",
+    "version": 1
+}

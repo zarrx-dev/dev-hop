@@ -1,0 +1,4 @@
+build/
+scratchpad/
+node_modules/
+extension/schemas/gschemas.compiled

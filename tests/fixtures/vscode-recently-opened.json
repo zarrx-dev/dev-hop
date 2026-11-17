@@ -1,0 +1,18 @@
+{
+    "entries": [
+        { "folderUri": "file:///home/alex/code/app" },
+        { "fileUri": "file:///home/alex/notes/todo.md" },
+        {
+            "folderUri": "vscode-remote://ssh-remote%2Bbuild-box/srv/site",
+            "remoteAuthority": "ssh-remote+build-box"
+        },
+        {
+            "workspace": {
+                "id": "1a2b3c",
+                "configPath": "file:///home/alex/code/mono/mono.code-workspace"
+            }
+        },
+        { "folderUri": "file:///home/alex/my%20projects/site" },
+        { "folderUri": "file:///home/alex/code/api" }
+    ]
+}

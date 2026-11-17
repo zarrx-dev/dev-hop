@@ -8,6 +8,8 @@ const testFiles = [
     'template.test.js',
     'fuzzy.test.js',
     'presets.test.js',
+    'sources.test.js',
+    'runner.test.js',
 ];
 
 for (const file of testFiles) {

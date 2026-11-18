@@ -4,7 +4,8 @@
 
 ### Added
 
-- docs: README.
+- docs: README, contributing guide, security policy and code of conduct.
+- ci: lint and unit tests on every push and pull request.
 - extension: top bar menu and Super+J search popup listing projects and SSH servers, with search, keyboard navigation, an action chooser and per-item default actions.
 - extension: projects from pinned folders, a git scan of chosen search folders, and recent folders from VS Code, VSCodium, Cursor, Zed, JetBrains IDEs and Claude Code.
 - extension: SSH servers from `~/.ssh/config`, including `Include` files.

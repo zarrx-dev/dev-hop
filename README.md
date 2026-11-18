@@ -1,5 +1,8 @@
 # dev-hop
 
+[![CI](https://github.com/zarrx-dev/dev-hop/actions/workflows/ci.yml/badge.svg)](https://github.com/zarrx-dev/dev-hop/actions/workflows/ci.yml)
+[![License: GPL-2.0](https://img.shields.io/badge/license-GPL--2.0-blue.svg)](LICENSE)
+
 A GNOME Shell extension that gets you into your projects and servers in one step. Open the top bar menu or press Super+J, type a few letters, and press Enter to open a terminal, an editor or an SSH session at the right place.
 
 ## Features
@@ -74,6 +77,7 @@ make nested   # run a nested GNOME Shell with the extension enabled
 
 `make nested` uses its own D-Bus session and settings under `scratchpad/nested`, and points the ssh config path at a test copy, so it never touches your real settings or `~/.ssh/config`.
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request, and [SECURITY.md](SECURITY.md) to report a security problem.
 
 ## License
 

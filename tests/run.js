@@ -9,6 +9,7 @@ const testFiles = [
     'fuzzy.test.js',
     'presets.test.js',
     'sources.test.js',
+    'programs.test.js',
     'runner.test.js',
     'uiModel.test.js',
     'prefsModel.test.js',

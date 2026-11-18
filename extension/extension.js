@@ -1,9 +1,9 @@
-import GLib from 'gi://GLib';
 import Meta from 'gi://Meta';
 import Shell from 'gi://Shell';
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { availableActions, run } from './src/actions/runner.js';
+import { findProgram } from './src/core/programs.js';
 import { getJSON } from './src/settings.js';
 import { SourceManager } from './src/sources/manager.js';
 import { Indicator } from './src/ui/indicator.js';
@@ -20,7 +20,7 @@ export default class DevHopExtension extends Extension {
         // next time the menu or the popup opens.
         const programs = new Map();
         this._findProgram = (binary) => {
-            if (!programs.has(binary)) programs.set(binary, GLib.find_program_in_path(binary));
+            if (!programs.has(binary)) programs.set(binary, findProgram(binary));
             return programs.get(binary);
         };
         this._deps = {

@@ -1,5 +1,5 @@
 // Editor and terminal presets. Templates use the placeholders of template.js.
-import GLib from 'gi://GLib';
+import { findProgram as findOnSystem } from './programs.js';
 
 /**
  * @typedef {{id: string, name: string, binary: string, icon: string, projectTemplate: string,
@@ -165,7 +165,7 @@ export const AUTO_TERMINAL_ORDER = [
  * @param {(binary: string) => string|null} [findProgram]
  * @returns {(P & {installed: boolean})[]}
  */
-export function detectInstalled(presets, findProgram = GLib.find_program_in_path) {
+export function detectInstalled(presets, findProgram = findOnSystem) {
     return presets.map((p) => ({ ...p, installed: Boolean(findProgram(p.binary)) }));
 }
 
@@ -173,7 +173,7 @@ export function detectInstalled(presets, findProgram = GLib.find_program_in_path
  * @param {(binary: string) => string|null} [findProgram]
  * @returns {TerminalPreset|null} the first installed terminal in AUTO_TERMINAL_ORDER
  */
-export function autoTerminal(findProgram = GLib.find_program_in_path) {
+export function autoTerminal(findProgram = findOnSystem) {
     for (const id of AUTO_TERMINAL_ORDER) {
         const preset = TERMINAL_PRESETS.find((p) => p.id === id);
         if (preset && findProgram(preset.binary)) return preset;

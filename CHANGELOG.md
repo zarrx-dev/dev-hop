@@ -11,3 +11,7 @@
 - extension: SSH servers from `~/.ssh/config`, including `Include` files.
 - extension: editable command templates for project and server actions; actions whose program is not installed are hidden.
 - prefs: Projects, Servers, Actions and General pages, including adding, editing and deleting ssh hosts with a timestamped backup before every write.
+
+### Fixed
+
+- extension: programs in `~/.local/bin` and other per-user folders are found even when the desktop session PATH does not include them.

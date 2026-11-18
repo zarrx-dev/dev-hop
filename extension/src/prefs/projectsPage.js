@@ -2,6 +2,7 @@ import Adw from 'gi://Adw';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Gtk from 'gi://Gtk';
+import { findProgram } from '../core/programs.js';
 import { getJSON, setJSON } from '../settings.js';
 import { MAX_REPOS, scanGit } from '../sources/gitScan.js';
 import { RECENT_READERS } from '../sources/manager.js';
@@ -329,7 +330,7 @@ function recentGroup(page, settings) {
     });
     const sqliteOk = sqliteAvailable();
     const env = {
-        findProgram: GLib.find_program_in_path,
+        findProgram,
         sqliteOk,
         dirExists: (rel) => GLib.file_test(`${home}/${rel}`, GLib.FileTest.IS_DIR),
     };

@@ -1,4 +1,9 @@
-import { availableActions, buildCommand, terminalPreset } from '../extension/src/actions/runner.js';
+import {
+    availableActions,
+    buildCommand,
+    buildLaunch,
+    terminalPreset,
+} from '../extension/src/actions/runner.js';
 import { assert, test } from './harness.js';
 import { FakeSettings } from './helpers.js';
 
@@ -118,7 +123,7 @@ test('runner: buildCommand for a plain terminal action', () => {
     const s = settingsWith();
     const cmd = buildCommand(s, 'project', project, projectActions[0], everything);
     assert.deepEqual(cmd, {
-        argv: ['gnome-terminal', '--working-directory=/home/alex/code/app'],
+        argv: ['/usr/bin/gnome-terminal', '--working-directory=/home/alex/code/app'],
         cwd: '/home/alex/code/app',
     });
 });
@@ -127,17 +132,20 @@ test('runner: buildCommand for a terminal action that runs a command', () => {
     const s = settingsWith();
     const cmd = buildCommand(s, 'project', project, projectActions[1], everything);
     assert.deepEqual(cmd.argv, [
-        'gnome-terminal',
+        '/usr/bin/gnome-terminal',
         '--working-directory=/home/alex/code/app',
         '--',
-        'claude',
+        '/usr/bin/claude',
     ]);
 });
 
 test('runner: buildCommand for an editor action', () => {
     const s = settingsWith();
     const cmd = buildCommand(s, 'project', project, projectActions[2], everything);
-    assert.deepEqual(cmd, { argv: ['zed', '/home/alex/code/app'], cwd: '/home/alex/code/app' });
+    assert.deepEqual(cmd, {
+        argv: ['/usr/bin/zed', '/home/alex/code/app'],
+        cwd: '/home/alex/code/app',
+    });
 });
 
 test('runner: buildCommand for SSH to a folder keeps the folder quoted in one argument', () => {
@@ -145,10 +153,10 @@ test('runner: buildCommand for SSH to a folder keeps the folder quoted in one ar
     const item = { ...server, remoteDir: '/srv/my app' };
     const cmd = buildCommand(s, 'server', item, serverActions[1], everything);
     assert.deepEqual(cmd.argv, [
-        'gnome-terminal',
+        '/usr/bin/gnome-terminal',
         `--working-directory=${cmd.cwd}`,
         '--',
-        'ssh',
+        '/usr/bin/ssh',
         '-t',
         'web',
         `cd '/srv/my app'; exec "$SHELL" -l`,
@@ -160,25 +168,25 @@ test('runner: buildCommand for a Zed remote action', () => {
     const s = settingsWith();
     const item = { ...server, remoteDir: '/srv/app' };
     const cmd = buildCommand(s, 'server', item, serverActions[2], everything);
-    assert.deepEqual(cmd.argv, ['zed', 'ssh://web/srv/app']);
+    assert.deepEqual(cmd.argv, ['/usr/bin/zed', 'ssh://web/srv/app']);
 });
 
 test('runner: a lone placeholder argument with no value is dropped', () => {
     const s = settingsWith();
     const withDir = { ...server, remoteDir: '/srv/app' };
     assert.deepEqual(buildCommand(s, 'server', server, serverActions[3], everything).argv, [
-        'code',
+        '/usr/bin/code',
         '--remote',
         'ssh-remote+web',
     ]);
     assert.deepEqual(buildCommand(s, 'server', withDir, serverActions[3], everything).argv, [
-        'code',
+        '/usr/bin/code',
         '--remote',
         'ssh-remote+web',
         '/srv/app',
     ]);
     assert.deepEqual(buildCommand(s, 'server', server, serverActions[2], everything).argv, [
-        'zed',
+        '/usr/bin/zed',
         'ssh://web',
     ]);
 });
@@ -196,4 +204,21 @@ test('runner: an empty argument that is not a lone placeholder is kept', () => {
 test('runner: buildCommand throws for a terminal action without a terminal', () => {
     const s = settingsWith();
     assert.throws(() => buildCommand(s, 'project', project, projectActions[0], finder([])));
+});
+
+test('runner: buildLaunch makes argv[0] absolute, also inside the terminal, and extends PATH', () => {
+    const s = settingsWith();
+    const known = ['gnome-terminal', 'claude', 'zed'];
+    const finderHome = (bin) => (known.includes(bin) ? `/home/alex/.local/bin/${bin}` : null);
+    const dirs = ['/usr/bin', '/home/alex/.local/bin'];
+    const launch = buildLaunch(s, 'project', project, projectActions[1], finderHome, dirs);
+    assert.deepEqual(launch.argv, [
+        '/home/alex/.local/bin/gnome-terminal',
+        '--working-directory=/home/alex/code/app',
+        '--',
+        '/home/alex/.local/bin/claude',
+    ]);
+    assert.equal(launch.path, '/usr/bin:/home/alex/.local/bin');
+    const editor = buildLaunch(s, 'project', project, projectActions[2], finderHome, dirs);
+    assert.equal(editor.argv[0], '/home/alex/.local/bin/zed');
 });

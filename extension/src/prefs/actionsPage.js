@@ -1,8 +1,8 @@
 import Adw from 'gi://Adw';
-import GLib from 'gi://GLib';
 import Gtk from 'gi://Gtk';
 import { terminalPreset } from '../actions/runner.js';
 import { detectInstalled, EDITOR_PRESETS, TERMINAL_PRESETS } from '../core/presets.js';
+import { findProgram } from '../core/programs.js';
 import { setJSON } from '../settings.js';
 import {
     badge,
@@ -50,7 +50,7 @@ const FALLBACK_ICON = 'application-x-executable-symbolic';
 function makeFinder() {
     const cache = new Map();
     return (binary) => {
-        if (!cache.has(binary)) cache.set(binary, GLib.find_program_in_path(binary));
+        if (!cache.has(binary)) cache.set(binary, findProgram(binary));
         return cache.get(binary);
     };
 }

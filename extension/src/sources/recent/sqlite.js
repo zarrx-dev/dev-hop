@@ -1,10 +1,10 @@
 // Reads SQLite databases through the sqlite3 command, so the extension needs no bindings.
 import Gio from 'gi://Gio';
-import GLib from 'gi://GLib';
+import { findProgram as findOnSystem } from '../../core/programs.js';
 
 Gio._promisify(Gio.Subprocess.prototype, 'communicate_utf8_async', 'communicate_utf8_finish');
 
-export function sqliteAvailable(findProgram = GLib.find_program_in_path) {
+export function sqliteAvailable(findProgram = findOnSystem) {
     return Boolean(findProgram('sqlite3'));
 }
 

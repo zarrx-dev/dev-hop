@@ -1,6 +1,7 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import { autoTerminal, TERMINAL_PRESETS } from '../core/presets.js';
+import { currentSearchDirs, findProgram as findOnSystem } from '../core/programs.js';
 import { resolve, wrapInTerminal } from '../core/template.js';
 import { getJSON } from '../settings.js';
 
@@ -30,7 +31,7 @@ function resolveArgs(template, vars) {
 }
 
 /** @returns {object|null} the terminal preset to use, or null when none is installed */
-export function terminalPreset(settings, findProgram = GLib.find_program_in_path) {
+export function terminalPreset(settings, findProgram = findOnSystem) {
     const id = settings.get_string('terminal-preset');
     if (id) {
         const preset = TERMINAL_PRESETS.find((p) => p.id === id);
@@ -47,7 +48,7 @@ export function terminalPreset(settings, findProgram = GLib.find_program_in_path
  * @param {object} item
  * @param {(binary: string) => string|null} [findProgram]
  */
-export function availableActions(settings, kind, item, findProgram = GLib.find_program_in_path) {
+export function availableActions(settings, kind, item, findProgram = findOnSystem) {
     const keys = KEYS[kind];
     const all = getJSON(settings, keys.actions, '[]');
     if (!Array.isArray(all)) return [];
@@ -73,37 +74,57 @@ export function availableActions(settings, kind, item, findProgram = GLib.find_p
 }
 
 /**
- * The command for an action. Pure: nothing is spawned.
+ * The command for an action. Pure: nothing is spawned. The program, and the terminal when there is
+ * one, are given as absolute paths so the spawn does not depend on PATH. A program that is not
+ * found keeps its name.
  * @returns {{argv: string[], cwd: string}}
  * @throws {Error} when the action runs in a terminal and none is installed, or the template is bad
  */
-export function buildCommand(
-    settings,
-    kind,
-    item,
-    action,
-    findProgram = GLib.find_program_in_path,
-) {
-    const argv = resolveArgs(action.template, varsFor(kind, item));
+export function buildCommand(settings, kind, item, action, findProgram = findOnSystem) {
+    const argv = absoluteFirst(resolveArgs(action.template, varsFor(kind, item)), findProgram);
     const cwd = cwdFor(kind, item);
     if (!action.runInTerminal) return { argv, cwd };
     const preset = terminalPreset(settings, findProgram);
     if (!preset) throw new Error('No terminal is installed');
-    return { argv: wrapInTerminal(preset, cwd, argv), cwd };
+    return { argv: absoluteFirst(wrapInTerminal(preset, cwd, argv), findProgram), cwd };
+}
+
+/** Replace argv[0] with its absolute path when it can be found. */
+function absoluteFirst(argv, findProgram) {
+    if (argv.length === 0) return argv;
+    return [findProgram(argv[0]) ?? argv[0], ...argv.slice(1)];
+}
+
+/**
+ * Everything needed to spawn an action: the command, the folder and the PATH for the child, which
+ * is the full search list so the program's own children find their tools.
+ * @param {string[]} [dirs]
+ * @returns {{argv: string[], cwd: string, path: string}}
+ */
+export function buildLaunch(
+    settings,
+    kind,
+    item,
+    action,
+    findProgram = findOnSystem,
+    dirs = currentSearchDirs(),
+) {
+    return { ...buildCommand(settings, kind, item, action, findProgram), path: dirs.join(':') };
 }
 
 /**
  * Start an action detached. Never throws.
  * @returns {{ok: true}|{ok: false, error: string}}
  */
-export function run(settings, kind, item, action, findProgram = GLib.find_program_in_path) {
+export function run(settings, kind, item, action, findProgram = findOnSystem) {
     try {
-        const { argv, cwd } = buildCommand(settings, kind, item, action, findProgram);
+        const { argv, cwd, path } = buildLaunch(settings, kind, item, action, findProgram);
         if (argv.length === 0) return { ok: false, error: 'The action has no command' };
         const launcher = new Gio.SubprocessLauncher({
             flags: Gio.SubprocessFlags.STDOUT_SILENCE | Gio.SubprocessFlags.STDERR_SILENCE,
         });
         launcher.set_cwd(cwd);
+        launcher.setenv('PATH', path, true);
         const proc = launcher.spawnv(argv);
         proc.wait_async(null, (p, res) => {
             try {

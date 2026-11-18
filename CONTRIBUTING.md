@@ -30,6 +30,8 @@ make install  # install into your session (log out and back in on Wayland)
 
 `make nested` runs in its own D-Bus session with its own settings under `scratchpad/nested`, and points the ssh config path at a test copy, so testing never touches your real settings or `~/.ssh/config`.
 
+Actions launched from the nested shell inherit its isolated XDG folders, so a tool that updates itself (for example a CLI auto-updater) may write into `scratchpad/nested` and repoint links in `~/.local/bin`. Avoid running self-updating tools from the nested shell, or check their links afterwards.
+
 ## Code layout
 
 - `extension/src/core/`: pure logic with no GNOME Shell imports (ssh config, templates, fuzzy search, presets). Unit tested under plain gjs.

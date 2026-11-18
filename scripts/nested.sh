@@ -37,6 +37,10 @@ fi
 chmod 600 "$SSH_CONFIG"
 echo "dev-hop nested: ssh test copy is $SSH_CONFIG (the real ~/.ssh/config is not used)"
 
+# Note: actions launched from the nested shell inherit these isolated XDG folders, so a tool that
+# updates itself (for example a CLI auto-updater) may write into scratchpad/nested and repoint
+# links in ~/.local/bin. Avoid running self-updating tools from here, or check their links after.
+
 # dconf is the settings backend for both the shell and the prefs window. The prefs process is
 # D-Bus activated, so it only sees what is in the bus activation environment: XDG_* is put
 # there below so dconf-service and the prefs window use the isolated dirs, not the real ones.

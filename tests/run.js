@@ -11,6 +11,7 @@ const testFiles = [
     'sources.test.js',
     'runner.test.js',
     'uiModel.test.js',
+    'prefsModel.test.js',
 ];
 
 for (const file of testFiles) {

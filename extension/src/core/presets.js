@@ -77,8 +77,8 @@ export const EDITOR_PRESETS = [
     },
 ];
 
-// gnome-terminal flags checked with `gnome-terminal --help-all`.
-// flags not verified on a live install
+// gnome-terminal flags are checked with `gnome-terminal --help-all`. The other presets follow
+// each terminal's documentation and have not been verified on a live install.
 /** @type {TerminalPreset[]} */
 export const TERMINAL_PRESETS = [
     {

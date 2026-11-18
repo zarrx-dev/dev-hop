@@ -12,6 +12,10 @@
 - extension: editable command templates for project and server actions; actions whose program is not installed are hidden.
 - prefs: Projects, Servers, Actions and General pages, including adding, editing and deleting ssh hosts with a timestamped backup before every write.
 
+### Changed
+
+- extension: recent projects show how long ago they were used (the popup also names the tool).
+
 ### Fixed
 
 - extension: programs in `~/.local/bin` and other per-user folders are found even when the desktop session PATH does not include them.

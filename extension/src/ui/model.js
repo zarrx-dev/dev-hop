@@ -104,12 +104,37 @@ export function rowIcon(kind, item) {
 }
 
 /**
- * The dim line under a project name: the path with ~, and for a recent project where it was
- * seen ("- Cursor", or "- recent in Cursor" when `verbose`).
+ * A short "how long ago" text for a wall-clock time in ms. Empty for a missing, zero, NaN or
+ * future time.
  */
-export function projectSubtitle(project, home, { verbose = false } = {}) {
+export function timeAgo(ms, nowMs = Date.now()) {
+    if (!Number.isFinite(ms) || ms <= 0 || !Number.isFinite(nowMs) || ms > nowMs) return '';
+    const MIN = 60000;
+    const diff = nowMs - ms;
+    if (diff < MIN) return 'just now';
+    if (diff < 60 * MIN) return `${Math.floor(diff / MIN)}m ago`;
+    const hours = diff / (60 * MIN);
+    if (hours < 24) return `${Math.floor(hours)}h ago`;
+    if (hours < 48) return 'yesterday';
+    const days = hours / 24;
+    if (days < 14) return `${Math.floor(days)}d ago`;
+    if (days < 60) return `${Math.floor(days / 7)}w ago`;
+    if (days < 365) return `${Math.floor(days / 30)}mo ago`;
+    return `${Math.floor(days / 365)}y ago`;
+}
+
+/**
+ * The dim line under a project name: the path with ~, and for a recent project how long ago it
+ * was used ("- 2h ago", or "- 2h ago in Claude Code" when `verbose`). Without a usable time it
+ * falls back to the source ("- Cursor", or "- recent in Cursor" when `verbose`).
+ */
+export function projectSubtitle(project, home, { verbose = false, now = Date.now() } = {}) {
     const path = shortenHome(project.path, home);
     if (project.source === 'recent' && project.recentFrom) {
+        const ago = timeAgo(project.time, now);
+        if (ago) {
+            return `${path}  -  ${ago}${verbose ? ` in ${project.recentFrom}` : ''}`;
+        }
         return `${path}  -  ${verbose ? 'recent in ' : ''}${project.recentFrom}`;
     }
     return path;
@@ -126,14 +151,14 @@ function matchIndices(query, text) {
     return score(query, text)?.indices ?? [];
 }
 
-function projectRow(item, home, verbose, indices = []) {
+function projectRow(item, home, verbose, indices = [], now = Date.now()) {
     return {
         kind: 'project',
         item,
         name: item.name,
         nameMarkup: highlightMarkup(item.name, indices),
         icon: rowIcon('project', item),
-        subtitle: projectSubtitle(item, home, { verbose }),
+        subtitle: projectSubtitle(item, home, { verbose, now }),
         indices,
     };
 }
@@ -170,6 +195,7 @@ export function buildSections({
     mode = 'menu',
     home = '',
     limit = DEFAULT_LIMIT,
+    now = Date.now(),
 }) {
     const q = query.trim();
     const verbose = mode === 'popup';
@@ -186,7 +212,7 @@ export function buildSections({
             if (item.kind === 'server') {
                 serverRows.push(serverRow(item, verbose, matchIndices(q, item.host)));
             } else {
-                projectRows.push(projectRow(item, home, verbose, matchIndices(q, item.name)));
+                projectRows.push(projectRow(item, home, verbose, matchIndices(q, item.name), now));
             }
         }
         add('projects', 'Projects', projectRows);
@@ -198,7 +224,7 @@ export function buildSections({
             budget -= rows.length;
             return rows;
         };
-        const make = (item) => projectRow(item, home, verbose);
+        const make = (item) => projectRow(item, home, verbose, [], now);
         add(
             'pinned',
             'Pinned',

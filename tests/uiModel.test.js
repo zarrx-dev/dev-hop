@@ -10,6 +10,7 @@ import {
     serverSubtitle,
     shortActionName,
     shortenHome,
+    timeAgo,
 } from '../extension/src/ui/model.js';
 import { assert, test } from './harness.js';
 
@@ -86,6 +87,60 @@ test('uiModel: shortActionName strips the "Open" wording', () => {
     assert.equal(shortActionName('Open terminal here'), 'Terminal');
     assert.equal(shortActionName('Terminal + Claude Code'), 'Terminal + Claude Code');
     assert.equal(shortActionName('SSH'), 'SSH');
+});
+
+test('uiModel: timeAgo buckets and boundaries', () => {
+    const NOW = 1_800_000_000_000;
+    const MIN = 60000;
+    const H = 60 * MIN;
+    const D = 24 * H;
+    const ago = (d) => timeAgo(NOW - d, NOW);
+    assert.equal(ago(0), 'just now');
+    assert.equal(ago(MIN - 1), 'just now');
+    assert.equal(ago(MIN), '1m ago');
+    assert.equal(ago(H - 1), '59m ago');
+    assert.equal(ago(H), '1h ago');
+    assert.equal(ago(24 * H - 1), '23h ago');
+    assert.equal(ago(24 * H), 'yesterday');
+    assert.equal(ago(48 * H - 1), 'yesterday');
+    assert.equal(ago(48 * H), '2d ago');
+    assert.equal(ago(14 * D - 1), '13d ago');
+    assert.equal(ago(14 * D), '2w ago');
+    assert.equal(ago(60 * D - 1), '8w ago');
+    assert.equal(ago(60 * D), '2mo ago');
+    assert.equal(ago(365 * D - 1), '12mo ago');
+    assert.equal(ago(365 * D), '1y ago');
+    assert.equal(ago(800 * D), '2y ago');
+    assert.equal(timeAgo(0, NOW), '');
+    assert.equal(timeAgo(undefined, NOW), '');
+    assert.equal(timeAgo(Number.NaN, NOW), '');
+    assert.equal(timeAgo(NOW + 1, NOW), '');
+});
+
+test('uiModel: recent subtitles show the age, and fall back to the source without a time', () => {
+    const NOW = 1_800_000_000_000;
+    const recent = { ...projects[2], recentFrom: 'Claude Code', time: NOW - 2 * 3600000 };
+    assert.equal(projectSubtitle(recent, HOME, { now: NOW }), '~/code/blog  -  2h ago');
+    assert.equal(
+        projectSubtitle(recent, HOME, { verbose: true, now: NOW }),
+        '~/code/blog  -  2h ago in Claude Code',
+    );
+    const future = { ...recent, time: NOW + 5000 };
+    assert.equal(projectSubtitle(future, HOME, { now: NOW }), '~/code/blog  -  Claude Code');
+    assert.equal(
+        projectSubtitle({ ...recent, time: 0 }, HOME, { verbose: true, now: NOW }),
+        '~/code/blog  -  recent in Claude Code',
+    );
+    const m = buildSections({ projects: [recent], servers: [], home: HOME, now: NOW });
+    assert.equal(m.sections[0].rows[0].subtitle, '~/code/blog  -  2h ago');
+    const p = buildSections({
+        projects: [recent],
+        servers: [],
+        home: HOME,
+        mode: 'popup',
+        now: NOW,
+    });
+    assert.equal(p.sections[0].rows[0].subtitle, '~/code/blog  -  2h ago in Claude Code');
 });
 
 test('uiModel: subtitles and icons', () => {

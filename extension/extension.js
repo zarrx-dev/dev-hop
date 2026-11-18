@@ -4,6 +4,7 @@ import Shell from 'gi://Shell';
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { availableActions, run } from './src/actions/runner.js';
+import { getJSON } from './src/settings.js';
 import { SourceManager } from './src/sources/manager.js';
 import { Indicator } from './src/ui/indicator.js';
 import { SearchPopup } from './src/ui/searchPopup.js';
@@ -29,6 +30,7 @@ export default class DevHopExtension extends Extension {
                 availableActions(this._settings, kind, item, this._findProgram),
             runAction: (kind, item, action) => this._runAction(kind, item, action),
             openPrefs: () => this.openPreferences(),
+            setDefault: (kind, item, actionId) => this._setDefault(kind, item, actionId),
             beginSession: () => programs.clear(),
         };
 
@@ -75,6 +77,18 @@ export default class DevHopExtension extends Extension {
         }
         const result = run(this._settings, kind, item, action, this._findProgram);
         if (!result.ok) Main.notify('dev-hop', result.error);
+    }
+
+    /**
+     * Store the default action of one project (item-overrides, keyed by path) or one server
+     * (server-meta, keyed by host). The manager rebuilds its lists synchronously on the change.
+     */
+    _setDefault(kind, item, actionId) {
+        const key = kind === 'server' ? 'server-meta' : 'item-overrides';
+        const id = kind === 'server' ? item.host : item.path;
+        const map = getJSON(this._settings, key, '{}') ?? {};
+        map[id] = { ...(map[id] ?? {}), defaultAction: actionId };
+        this._settings.set_string(key, JSON.stringify(map));
     }
 
     _syncIndicator() {

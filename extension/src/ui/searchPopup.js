@@ -127,9 +127,12 @@ export class SearchPopup {
         const top = Math.round(area.height * 0.15);
         const width = Math.min(POPUP_WIDTH, area.width - 2 * SCREEN_MARGIN);
         this._card.set_width(width);
-        this._card.margin_top = area.y - monitor.y + top;
-        this._card.margin_left = area.x - monitor.x;
-        this._card.margin_right = monitor.x + monitor.width - (area.x + area.width);
+        // Explicit position inside the root (a plain widget with no layout manager): the theme's
+        // `popup-menu-content` margins and a BinLayout cannot move it.
+        this._card.set_position(
+            Math.round(area.x - monitor.x + (area.width - width) / 2),
+            Math.round(area.y - monitor.y + top),
+        );
 
         // Search bar, footer and borders take a fixed share; the list gets the rest and scrolls.
         const available = area.height - top - SCREEN_MARGIN - CHROME_HEIGHT;
@@ -141,7 +144,6 @@ export class SearchPopup {
         this._root = new St.Widget({
             style_class: 'dev-hop-backdrop',
             reactive: true,
-            layout_manager: new Clutter.BinLayout(),
         });
         this._root.connect('captured-event', (_actor, event) => {
             try {
@@ -160,8 +162,6 @@ export class SearchPopup {
             style_class: 'popup-menu-content dev-hop-popup',
             vertical: true,
             reactive: true,
-            x_align: Clutter.ActorAlign.CENTER,
-            y_align: Clutter.ActorAlign.START,
         });
         this._card = card;
         this._root.add_child(card);
@@ -429,22 +429,32 @@ export class SearchPopup {
         this._deps.runAction(entry.row.kind, entry.row.item, entry.defaultAction);
     }
 
-    _openChooser() {
+    _openChooser({ picking = false } = {}) {
         const entry = this._entries[this._selected];
         if (!entry) return;
-        const { runAction, openPrefs, iconDir } = this._deps;
+        const { runAction, setDefault, iconDir } = this._deps;
         this._chooser = new ActionChooser({
-            title: `Actions for ${entry.row.name}`,
+            title: picking
+                ? `Choose the default for ${entry.row.name}`
+                : `Actions for ${entry.row.name}`,
             kind: entry.row.kind,
             actions: entry.actions,
             iconDir,
+            picking,
             onRun: (action) => {
+                if (picking) {
+                    // Store it, then come back to the chooser with the badge moved.
+                    setDefault(entry.row.kind, entry.row.item, action.id);
+                    this._closeChooser();
+                    this._openChooser();
+                    return;
+                }
                 this.close();
                 runAction(entry.row.kind, entry.row.item, action);
             },
             onSetDefault: () => {
-                this.close();
-                openPrefs();
+                this._closeChooser();
+                this._openChooser({ picking: true });
             },
         });
         this._scrim = new St.Widget({

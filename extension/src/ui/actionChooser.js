@@ -10,9 +10,11 @@ import { createIcon, createTag, DIM_OPACITY } from './widgets.js';
 export class ActionChooser {
     /**
      * @param {{title: string, kind: 'project'|'server', actions: object[], iconDir: string,
-     *   onRun: (action: object) => void, onSetDefault: () => void}} options
+     *   onRun: (action: object) => void, onSetDefault: () => void, picking?: boolean}} options
+     *   `picking`: the rows choose a new default (no "set default" row); the caller handles it
+     *   in `onRun`.
      */
-    constructor({ title, kind, actions, iconDir, onRun, onSetDefault }) {
+    constructor({ title, kind, actions, iconDir, onRun, onSetDefault, picking = false }) {
         this._entries = [];
         this._selected = 0;
 
@@ -36,19 +38,21 @@ export class ActionChooser {
                 run: () => onRun(action),
             });
         }
-        if (actions.length > 0) {
-            this.actor.add_child(new St.Widget({ style_class: 'dev-hop-separator' }));
+        if (!picking) {
+            if (actions.length > 0) {
+                this.actor.add_child(new St.Widget({ style_class: 'dev-hop-separator' }));
+            }
+            this._addRow({
+                icon: 'star',
+                label:
+                    kind === 'project'
+                        ? 'Set default for this project...'
+                        : 'Set default for this server...',
+                badge: false,
+                iconDir,
+                run: () => onSetDefault(),
+            });
         }
-        this._addRow({
-            icon: 'star',
-            label:
-                kind === 'project'
-                    ? 'Set default for this project...'
-                    : 'Set default for this server...',
-            badge: false,
-            iconDir,
-            run: () => onSetDefault(),
-        });
 
         const first = actions.findIndex((a) => a.isDefault);
         this._select(first >= 0 ? first : 0);

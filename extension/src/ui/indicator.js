@@ -107,6 +107,7 @@ export const Indicator = GObject.registerClass(
 
         _onOpened() {
             this._deps.beginSession();
+            this._openKey = null;
             this._query = '';
             this._entry.set_text('');
             this._render();
@@ -193,24 +194,34 @@ export const Indicator = GObject.registerClass(
             submenu.actor.add_style_class_name('dev-hop-submenu');
             submenu.actor.hide();
             let filled = false;
-            item.connect('toggle-actions', () => {
-                const open = !submenu.actor.visible;
+            const key = `${row.kind}:${row.item.path ?? row.item.host}`;
+            const setOpen = (open) => {
                 if (open && !filled) {
                     filled = true;
-                    this._fillActions(submenu, row, actions);
+                    this._fillActions(submenu, row, actions, false);
                 }
                 submenu.actor.visible = open;
                 item.setExpanded(open);
+                this._openKey = open ? key : null;
                 if (open) ensureVisible(this._scroll, submenu.actor);
-            });
+            };
+            item.connect('toggle-actions', () => setOpen(!submenu.actor.visible));
 
             this._list.addMenuItem(item);
             this._list.addMenuItem(submenu);
             this._entries.push({ row, defaultAction });
+            // A re-render (after a default changed) keeps the open submenu open.
+            if (this._openKey === key) setOpen(true);
         }
 
-        _fillActions(submenu, row, actions) {
-            const { runAction, openPrefs } = this._deps;
+        /**
+         * Fill the actions submenu. With `picking`, activating an action stores it as the new
+         * default (the manager then re-renders the menu, which keeps this submenu open).
+         */
+        _fillActions(submenu, row, actions, picking) {
+            const { runAction, setDefault } = this._deps;
+            submenu.removeAll();
+            submenu.actor.destroy_all_children();
             for (const action of actions) {
                 const item = new PopupMenu.PopupImageMenuItem(
                     action.name,
@@ -219,7 +230,12 @@ export const Indicator = GObject.registerClass(
                 item.setOrnament(
                     action.isDefault ? PopupMenu.Ornament.CHECK : PopupMenu.Ornament.NONE,
                 );
-                item.connect('activate', () => runAction(row.kind, row.item, action));
+                if (picking) {
+                    // Overriding activate keeps the menu open: nothing is emitted to close it.
+                    item.activate = () => setDefault(row.kind, row.item, action.id);
+                } else {
+                    item.connect('activate', () => runAction(row.kind, row.item, action));
+                }
                 submenu.addMenuItem(item);
             }
             // A plain thin line: PopupSeparatorMenuItem brings its own row height.
@@ -228,15 +244,16 @@ export const Indicator = GObject.registerClass(
                     new St.Widget({ style_class: 'dev-hop-separator dev-hop-submenu-separator' }),
                 );
             }
-            const label =
-                row.kind === 'project'
-                    ? 'Set default action for this project...'
-                    : 'Set default action for this server...';
-            const setDefault = new PopupMenu.PopupImageMenuItem(label, 'starred-symbolic');
+            const what = row.kind === 'project' ? 'project' : 'server';
+            const label = picking
+                ? 'Pick the new default above (cancel)'
+                : `Set default action for this ${what}...`;
+            const toggle = new PopupMenu.PopupImageMenuItem(label, 'starred-symbolic');
             // Same ornament state as the action items, so all icons line up.
-            setDefault.setOrnament(PopupMenu.Ornament.NONE);
-            setDefault.connect('activate', () => openPrefs());
-            submenu.addMenuItem(setDefault);
+            toggle.setOrnament(PopupMenu.Ornament.NONE);
+            // Switches between "run" and "pick the default" in place; the menu stays open.
+            toggle.activate = () => this._fillActions(submenu, row, actions, !picking);
+            submenu.addMenuItem(toggle);
         }
 
         _activateFirst() {

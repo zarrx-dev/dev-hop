@@ -27,7 +27,15 @@ const serverActions = [
         name: 'Zed remote',
         template: 'zed ssh://{host}{remoteDirUrl}',
         runInTerminal: false,
-        requiresRemoteDir: true,
+        requiresRemoteDir: false,
+        enabled: true,
+    },
+    {
+        id: 'vscode-remote',
+        name: 'VS Code remote',
+        template: 'code --remote ssh-remote+{host} {remoteDir}',
+        runInTerminal: false,
+        requiresRemoteDir: false,
         enabled: true,
     },
 ];
@@ -72,12 +80,12 @@ test('runner: requiresRemoteDir hides actions for a server without one', () => {
     const s = settingsWith();
     assert.deepEqual(
         availableActions(s, 'server', server, everything).map((a) => a.id),
-        ['ssh'],
+        ['ssh', 'zed-remote', 'vscode-remote'],
     );
     const withDir = { ...server, remoteDir: '/srv/app' };
     assert.deepEqual(
         availableActions(s, 'server', withDir, everything).map((a) => a.id),
-        ['ssh', 'ssh-folder', 'zed-remote'],
+        ['ssh', 'ssh-folder', 'zed-remote', 'vscode-remote'],
     );
 });
 
@@ -153,6 +161,36 @@ test('runner: buildCommand for a Zed remote action', () => {
     const item = { ...server, remoteDir: '/srv/app' };
     const cmd = buildCommand(s, 'server', item, serverActions[2], everything);
     assert.deepEqual(cmd.argv, ['zed', 'ssh://web/srv/app']);
+});
+
+test('runner: a lone placeholder argument with no value is dropped', () => {
+    const s = settingsWith();
+    const withDir = { ...server, remoteDir: '/srv/app' };
+    assert.deepEqual(buildCommand(s, 'server', server, serverActions[3], everything).argv, [
+        'code',
+        '--remote',
+        'ssh-remote+web',
+    ]);
+    assert.deepEqual(buildCommand(s, 'server', withDir, serverActions[3], everything).argv, [
+        'code',
+        '--remote',
+        'ssh-remote+web',
+        '/srv/app',
+    ]);
+    assert.deepEqual(buildCommand(s, 'server', server, serverActions[2], everything).argv, [
+        'zed',
+        'ssh://web',
+    ]);
+});
+
+test('runner: an empty argument that is not a lone placeholder is kept', () => {
+    const s = settingsWith();
+    const action = { id: 'x', template: 'tool {user}{name} --a={remoteDir}', enabled: true };
+    assert.deepEqual(buildCommand(s, 'server', server, action, everything).argv, [
+        'tool',
+        'deploy',
+        '--a=',
+    ]);
 });
 
 test('runner: buildCommand throws for a terminal action without a terminal', () => {

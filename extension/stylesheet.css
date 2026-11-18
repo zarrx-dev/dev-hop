@@ -1,0 +1,322 @@
+/* dev-hop styles.
+   Radii: 4 / 7 / 10 / 14 / 20 px. Spacing: 4 / 8 / 12 / 16 / 24 px.
+
+   The top bar menu sits inside the user's shell theme (light or dark), so it sets no
+   foreground colours: text inherits the theme colour, dimmed text and icons are dimmed with
+   actor.opacity in JS, and backgrounds are neutral translucent greys.
+   The search popup and the action chooser draw their own dark surface and set every colour
+   explicitly. */
+
+/* ---------- shared ---------- */
+
+.dev-hop-row-text {
+    spacing: 0;
+}
+
+.dev-hop-row-title {
+    font-weight: bold;
+}
+
+/* Equal gap on both sides of the dash between the path and the source. */
+.dev-hop-row-subline {
+    spacing: 6px;
+}
+
+.dev-hop-row-subtitle {
+    font-size: 12px;
+}
+
+.dev-hop-tag {
+    min-height: 22px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background-color: rgba(127, 127, 127, 0.15);
+    font-size: 12px;
+}
+
+.dev-hop-default-badge {
+    min-height: 20px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background-color: #3584e4;
+    font-size: 12px;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.dev-hop-key {
+    min-height: 22px;
+    padding: 0 8px;
+    border: 1px solid rgba(127, 127, 127, 0.25);
+    border-radius: 4px;
+    background-color: rgba(127, 127, 127, 0.15);
+    font-family: monospace;
+    font-size: 12px;
+}
+
+.dev-hop-section-header {
+    padding: 12px 16px 4px 16px;
+}
+
+.dev-hop-section-title {
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.dev-hop-section-count {
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.dev-hop-empty {
+    padding: 24px 16px;
+    spacing: 4px;
+    text-align: center;
+}
+
+.dev-hop-empty-title {
+    font-size: 17px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.dev-hop-empty-text {
+    max-width: 320px;
+    font-size: 13px;
+    text-align: center;
+}
+
+.dev-hop-separator {
+    height: 1px;
+    margin: 8px 12px;
+    background-color: rgba(127, 127, 127, 0.25);
+}
+
+/* ---------- top bar menu ---------- */
+
+.dev-hop-menu {
+    min-width: 360px;
+    max-width: 360px;
+}
+
+.popup-menu-item.dev-hop-search-item {
+    padding: 4px 8px;
+}
+
+.dev-hop-search-entry {
+    min-height: 36px;
+    padding: 0 12px;
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-color: rgba(127, 127, 127, 0.15);
+    box-shadow: none;
+    selection-background-color: rgba(53, 132, 228, 0.6);
+}
+
+.dev-hop-search-entry:focus {
+    border-color: #3584e4;
+    box-shadow: none;
+}
+
+.dev-hop-search-icon {
+    icon-size: 16px;
+    padding-right: 8px;
+}
+
+.dev-hop-scroll {
+    max-height: 460px;
+}
+
+.popup-menu-item.dev-hop-header-item,
+.popup-menu-item.dev-hop-empty-item {
+    padding: 0;
+    margin: 0;
+}
+
+.popup-menu-item.dev-hop-row {
+    min-height: 42px;
+    margin: 0 8px;
+    padding: 4px 8px 4px 12px;
+    border-radius: 10px;
+    spacing: 12px;
+}
+
+.popup-menu-item.dev-hop-row-open {
+    background-color: rgba(127, 127, 127, 0.15);
+}
+
+.dev-hop-expander {
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+}
+
+.dev-hop-expander:hover,
+.dev-hop-expander:focus {
+    background-color: rgba(127, 127, 127, 0.15);
+}
+
+.dev-hop-submenu {
+    margin: 4px 8px 8px 8px;
+    padding: 4px;
+    border-radius: 10px;
+    background-color: rgba(127, 127, 127, 0.15);
+}
+
+/* St's min-height excludes padding, so the theme's item padding is reset: 38px per item. */
+.dev-hop-submenu .popup-menu-item {
+    min-height: 38px;
+    margin: 0;
+    padding: 0 12px;
+    border-radius: 7px;
+    spacing: 8px;
+}
+
+.dev-hop-submenu .popup-menu-ornament {
+    width: 16px;
+}
+
+.dev-hop-submenu .dev-hop-submenu-separator {
+    margin: 4px 8px;
+}
+
+/* ---------- search popup ---------- */
+
+.dev-hop-backdrop {
+    background-color: rgba(0, 0, 0, 0.45);
+}
+
+/* The popup surface comes from the stock `popup-menu-content` class (added in JS), so its
+   background and text colour follow the shell theme. Only shape and spacing are set here. */
+.popup-menu-content.dev-hop-popup {
+    margin: 0;
+    padding: 0;
+    border: 1px solid rgba(127, 127, 127, 0.25);
+    border-radius: 20px;
+}
+
+.dev-hop-popup-bar {
+    height: 58px;
+    padding: 0 16px;
+    border-bottom: 1px solid rgba(127, 127, 127, 0.25);
+    spacing: 12px;
+}
+
+.dev-hop-popup-entry {
+    min-height: 32px;
+    padding: 0;
+    border: none;
+    background-color: transparent;
+    box-shadow: none;
+    font-size: 17px;
+    selection-background-color: rgba(53, 132, 228, 0.6);
+}
+
+.dev-hop-popup-entry StLabel.hint-text,
+.dev-hop-popup-entry .hint-text {
+    color: rgba(127, 127, 127, 0.9);
+}
+
+.dev-hop-popup-entry:focus {
+    border: none;
+    box-shadow: none;
+}
+
+.dev-hop-popup-list {
+    min-height: 120px;
+    padding: 4px 8px 8px 8px;
+}
+
+.dev-hop-popup .dev-hop-section-header {
+    padding: 12px 12px 4px 12px;
+}
+
+/* St's min-height excludes padding: 38px + 2 x 8px padding = a 54px row. */
+.dev-hop-result-row {
+    min-height: 38px;
+    margin: 0;
+    padding: 8px 12px;
+    border-radius: 10px;
+    spacing: 12px;
+}
+
+.dev-hop-result-row StBoxLayout {
+    spacing: 12px;
+}
+
+/* The rule above also matches the title/subtitle box; keep that one tight. */
+.dev-hop-result-row .dev-hop-row-text {
+    spacing: 0;
+}
+
+.dev-hop-result-row .dev-hop-row-subline {
+    spacing: 6px;
+}
+
+.dev-hop-result-row.dev-hop-selected {
+    background-color: rgba(53, 132, 228, 0.42);
+}
+
+.dev-hop-popup .dev-hop-row-title {
+    font-size: 14.5px;
+}
+
+.dev-hop-popup .dev-hop-row-subtitle {
+    font-size: 13px;
+}
+
+.dev-hop-popup-foot {
+    padding: 12px 16px;
+    border-top: 1px solid rgba(127, 127, 127, 0.25);
+    spacing: 16px;
+}
+
+.dev-hop-hint {
+    spacing: 8px;
+}
+
+.dev-hop-hint-text {
+    font-size: 13px;
+}
+
+/* ---------- action chooser ---------- */
+
+.dev-hop-chooser-scrim {
+    padding: 12px 16px;
+    background-color: rgba(0, 0, 0, 0.45);
+}
+
+/* Surface and text colour come from the stock `popup-menu-content` class (added in JS). */
+.popup-menu-content.dev-hop-chooser {
+    min-width: 340px;
+    margin: 0;
+    padding: 8px 0;
+    border: 1px solid rgba(127, 127, 127, 0.25);
+    border-radius: 14px;
+}
+
+.dev-hop-chooser-head {
+    padding: 8px 16px 4px 16px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.dev-hop-chooser-row {
+    min-height: 38px;
+    margin: 0 8px;
+    padding: 4px 12px;
+    border-radius: 10px;
+}
+
+.dev-hop-chooser-row StBoxLayout {
+    spacing: 12px;
+}
+
+.dev-hop-chooser-row.dev-hop-selected {
+    background-color: rgba(53, 132, 228, 0.42);
+}
+
+.dev-hop-chooser-label {
+    font-size: 14.5px;
+}

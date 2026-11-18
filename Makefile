@@ -9,7 +9,7 @@ schemas:
 pack: schemas
 	@# gnome-extensions 46 segfaults if --out-dir is missing, so create it first.
 	mkdir -p $(CURDIR)/build
-	gnome-extensions pack $(CURDIR)/extension --extra-source=$(CURDIR)/extension/src --force --out-dir=$(CURDIR)/build
+	gnome-extensions pack $(CURDIR)/extension --extra-source=$(CURDIR)/extension/src --extra-source=$(CURDIR)/extension/icons --force --out-dir=$(CURDIR)/build
 
 install: pack
 	gnome-extensions install --force $(ZIP)

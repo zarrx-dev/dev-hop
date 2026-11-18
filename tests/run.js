@@ -10,6 +10,7 @@ const testFiles = [
     'presets.test.js',
     'sources.test.js',
     'runner.test.js',
+    'uiModel.test.js',
 ];
 
 for (const file of testFiles) {

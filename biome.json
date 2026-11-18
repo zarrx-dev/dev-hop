@@ -17,6 +17,19 @@
         }
     },
     "files": {
-        "includes": ["extension/**", "tests/**"]
-    }
+        "includes": ["extension/**", "tests/**", "!extension/icons/**"]
+    },
+    "overrides": [
+        {
+            "includes": ["extension/stylesheet.css"],
+            "linter": {
+                "rules": {
+                    "correctness": {
+                        "noUnknownProperty": "off",
+                        "noUnknownTypeSelector": "off"
+                    }
+                }
+            }
+        }
+    ]
 }

@@ -18,6 +18,17 @@ function cwdFor(kind, item) {
     return kind === 'project' ? item.path : GLib.get_home_dir();
 }
 
+/**
+ * Resolve a template, dropping an argument that is a lone placeholder with an empty value, so
+ * `code --remote ssh-remote+host {remoteDir}` without a folder loses its last argument.
+ */
+function resolveArgs(template, vars) {
+    const argv = resolve(template, vars);
+    if (!template || template.trim() === '') return argv;
+    const raw = GLib.shell_parse_argv(template)[1];
+    return argv.filter((arg, i) => !(arg === '' && /^\{\w+\}$/.test(raw[i])));
+}
+
 /** @returns {object|null} the terminal preset to use, or null when none is installed */
 export function terminalPreset(settings, findProgram = GLib.find_program_in_path) {
     const id = settings.get_string('terminal-preset');
@@ -47,7 +58,7 @@ export function availableActions(settings, kind, item, findProgram = GLib.find_p
         if (action.requiresRemoteDir && !item.remoteDir) return false;
         let argv;
         try {
-            argv = resolve(action.template, vars);
+            argv = resolveArgs(action.template, vars);
         } catch (_e) {
             return false;
         }
@@ -73,7 +84,7 @@ export function buildCommand(
     action,
     findProgram = GLib.find_program_in_path,
 ) {
-    const argv = resolve(action.template, varsFor(kind, item));
+    const argv = resolveArgs(action.template, varsFor(kind, item));
     const cwd = cwdFor(kind, item);
     if (!action.runInTerminal) return { argv, cwd };
     const preset = terminalPreset(settings, findProgram);

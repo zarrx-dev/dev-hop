@@ -1,8 +1,15 @@
-// Fuzzy subsequence matching for the search popup.
+// Strict matching for the search popup and the menu search, like editor quick-open.
+//
+// A query matches a text when it is a plain substring of it (anywhere), or when it splits into
+// runs of consecutive characters that each start at a word boundary ("dh" in "dev-hop").
+// Letters scattered in the middle of words never match.
 
-const BONUS_START = 8;
-const BONUS_BOUNDARY = 6;
-const BONUS_CONSECUTIVE = 7;
+const SUBSTRING_BASE = 1000;
+const SUBSTRING_START = 40;
+const SUBSTRING_BOUNDARY = 20;
+const CHAR_GAIN = 2;
+const RUN_GAIN = 5;
+const RUN_PENALTY = 3;
 const LENGTH_PENALTY = 0.05;
 
 /** Field weights used by rank() when a field is given as a plain string. */
@@ -16,10 +23,65 @@ function isBoundary(text, j) {
     return prev === prev.toLowerCase() && prev !== prev.toUpperCase() && cur !== cur.toLowerCase();
 }
 
+function range(from, count) {
+    return Array.from({ length: count }, (_, i) => from + i);
+}
+
+/** Best plain-substring match, preferring the start of the text, then word boundaries. */
+function substringMatch(q, t, text) {
+    let best = null;
+    let at = t.indexOf(q);
+    while (at !== -1) {
+        let gain = 0;
+        if (at === 0) gain = SUBSTRING_START;
+        else if (isBoundary(text, at)) gain = SUBSTRING_BOUNDARY;
+        if (best === null || gain > best.gain) best = { at, gain };
+        at = t.indexOf(q, at + 1);
+    }
+    if (best === null) return null;
+    return {
+        score: SUBSTRING_BASE + q.length * CHAR_GAIN + best.gain - t.length * LENGTH_PENALTY,
+        indices: range(best.at, q.length),
+    };
+}
+
+/** Best split of the query into runs that each start at a word boundary, in text order. */
+function wordStartMatch(q, t, text) {
+    const n = q.length;
+    const m = t.length;
+    const memo = new Map();
+    // best(qi, from): best way to match q[qi..] using text positions >= from.
+    const best = (qi, from) => {
+        if (qi === n) return { score: 0, indices: [] };
+        const key = qi * (m + 1) + from;
+        if (memo.has(key)) return memo.get(key);
+        let top = null;
+        for (let j = from; j < m; j++) {
+            if (t[j] !== q[qi] || !isBoundary(text, j)) continue;
+            let len = 0;
+            while (qi + len < n && j + len < m && t[j + len] === q[qi + len]) {
+                len++;
+                const rest = best(qi + len, j + len);
+                if (rest === null) continue;
+                const s = len * CHAR_GAIN + RUN_GAIN - RUN_PENALTY + rest.score;
+                if (top === null || s > top.score) {
+                    top = { score: s, indices: [...range(j, len), ...rest.indices] };
+                }
+            }
+        }
+        memo.set(key, top);
+        return top;
+    };
+    const r = best(0, 0);
+    if (r === null) return null;
+    return { score: r.score - m * LENGTH_PENALTY, indices: r.indices };
+}
+
 /**
- * Case-insensitive subsequence match. The best alignment wins: bonuses for the first
- * character, word boundaries (`-` `_` `/` `.` space, camelCase) and consecutive runs, and a
- * small penalty for long text.
+ * Case-insensitive strict match. A plain substring scores highest (more at the start of the
+ * text or at a word boundary). Otherwise every run of consecutive query characters must start
+ * at a word boundary (`-` `_` `/` `.` space, camelCase, start of text); fewer runs and shorter
+ * text score higher.
  * @param {string} query
  * @param {string} text
  * @returns {{score: number, indices: number[]}|null} null when the query does not match;
@@ -29,60 +91,10 @@ export function score(query, text) {
     if (query === '') return { score: 0, indices: [] };
     const q = query.toLowerCase();
     const t = text.toLowerCase();
-    const n = q.length;
-    const m = t.length;
-    if (n > m) return null;
-
-    // best[i][j]: best score matching q[0..i] with q[i] at text position j.
-    const best = [];
-    const from = [];
-    for (let i = 0; i < n; i++) {
-        best.push(new Array(m).fill(-Infinity));
-        from.push(new Array(m).fill(-1));
-        let runMax = -Infinity;
-        let runArg = -1;
-        for (let j = i; j < m; j++) {
-            // runMax tracks the best previous-row score at positions <= j - 2.
-            if (i > 0 && j - 2 >= 0 && best[i - 1][j - 2] > runMax) {
-                runMax = best[i - 1][j - 2];
-                runArg = j - 2;
-            }
-            if (t[j] !== q[i]) continue;
-            let gain = 1;
-            if (j === 0) gain += BONUS_START;
-            else if (isBoundary(text, j)) gain += BONUS_BOUNDARY;
-            if (i === 0) {
-                best[i][j] = gain;
-                continue;
-            }
-            let prev = runMax;
-            let prevAt = runArg;
-            const adjacent = j - 1 >= 0 ? best[i - 1][j - 1] + BONUS_CONSECUTIVE : -Infinity;
-            if (adjacent > prev) {
-                prev = adjacent;
-                prevAt = j - 1;
-            }
-            if (prev === -Infinity) continue;
-            best[i][j] = prev + gain;
-            from[i][j] = prevAt;
-        }
-    }
-
-    let end = -1;
-    let top = -Infinity;
-    for (let j = 0; j < m; j++) {
-        if (best[n - 1][j] > top) {
-            top = best[n - 1][j];
-            end = j;
-        }
-    }
-    if (end < 0) return null;
-    const indices = new Array(n);
-    for (let i = n - 1, j = end; i >= 0; i--) {
-        indices[i] = j;
-        j = from[i][j];
-    }
-    return { score: top - m * LENGTH_PENALTY, indices };
+    if (q.length > t.length) return null;
+    // toLowerCase can change the length for some characters; skip matching then.
+    if (t.length !== text.length) return null;
+    return substringMatch(q, t, text) ?? wordStartMatch(q, t, text);
 }
 
 function fieldText(item, key) {
